@@ -94,7 +94,7 @@ public class User implements UserDetails, Principal {
         return email;
     }
 
-    private String getFullName() {
-        return firstName + lastName;
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 }
