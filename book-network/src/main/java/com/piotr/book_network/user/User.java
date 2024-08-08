@@ -1,5 +1,7 @@
 package com.piotr.book_network.user;
 
+import com.piotr.book_network.book.Book;
+import com.piotr.book_network.history.BookTransactionHistory;
 import com.piotr.book_network.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,6 +45,10 @@ public class User implements UserDetails, Principal {
     private Boolean enabled;
     @ManyToMany(fetch = EAGER)
     private List<Role> roles;
+    @OneToMany(mappedBy = "owner")
+    private List<Book> books;
+    @OneToMany(mappedBy = "user")
+    private List<BookTransactionHistory> histories;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
