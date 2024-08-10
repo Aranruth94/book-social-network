@@ -1,5 +1,7 @@
 package com.piotr.book_network.book;
 
+import com.piotr.book_network.history.BookTransactionHistory;
+import com.piotr.book_network.history.BookTransactionHistoryRepository;
 import com.piotr.book_network.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +21,13 @@ import static com.piotr.book_network.book.BookSpecification.withOwnerId;
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
+    private final BookTransactionHistoryRepository bookTransactionHistoryRepository;
     private final BookMapper bookMapper;
 
     @Override
     public Integer saveBook(BookRequest bookRequest, Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        Book book = mapAndPrepareBook(bookRequest, currentUser);
+        User user = (User) authentication.getPrincipal();
+        Book book = mapAndPrepareBook(bookRequest, user);
         return saveAndReturnBookId(book);
     }
 
@@ -37,8 +40,8 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public PageResponse<BookResponse> findAllBooks(int page, int size, Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        Page<Book> books = findDisplayableBooks(page, size, currentUser);
+        User user = (User) authentication.getPrincipal();
+        Page<Book> books = findDisplayableBooks(page, size, user);
         List<BookResponse> bookResponse = books.stream()
                 .map(bookMapper::mapToBookResponse)
                 .toList();
@@ -55,8 +58,8 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public PageResponse<BookResponse> findAllBooksByOwner(int page, int size, Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        Page<Book> books = findBooksByOwner(page, size, currentUser);
+        User user = (User) authentication.getPrincipal();
+        Page<Book> books = findBooksByOwner(page, size, user);
         List<BookResponse> bookResponse = books.stream()
                 .map(bookMapper::mapToBookResponse)
                 .toList();
@@ -71,9 +74,45 @@ public class BookServiceImpl implements BookService {
         );
     }
 
-    private Book mapAndPrepareBook(BookRequest bookRequest, User currentUser) {
+    @Override
+    public PageResponse<BorrowedBookResponse> findAllBorrowedBooks(int page, int size, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        Page<BookTransactionHistory> borrowedBooks = findBorrowedBooks(page, size, user);
+        List<BorrowedBookResponse> borrowedBookResponse = borrowedBooks.stream()
+                .map(bookMapper::mapToBorrowedBookResponse)
+                .toList();
+        return new PageResponse<>(
+                borrowedBookResponse,
+                borrowedBooks.getNumber(),
+                borrowedBooks.getSize(),
+                borrowedBooks.getTotalElements(),
+                borrowedBooks.getTotalPages(),
+                borrowedBooks.isFirst(),
+                borrowedBooks.isLast()
+        );
+    }
+
+    @Override
+    public PageResponse<BorrowedBookResponse> findAllReturnedBooks(int page, int size, Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        Page<BookTransactionHistory> returnedBooks = findReturnedBooks(page, size, user);
+        List<BorrowedBookResponse> returnedBookResponse = returnedBooks.stream()
+                .map(bookMapper::mapToBorrowedBookResponse)
+                .toList();
+        return new PageResponse<>(
+                returnedBookResponse,
+                returnedBooks.getNumber(),
+                returnedBooks.getSize(),
+                returnedBooks.getTotalElements(),
+                returnedBooks.getTotalPages(),
+                returnedBooks.isFirst(),
+                returnedBooks.isLast()
+        );
+    }
+
+    private Book mapAndPrepareBook(BookRequest bookRequest, User user) {
         Book book = bookMapper.mapToBook(bookRequest);
-        book.setOwner(currentUser);
+        book.setOwner(user);
         return book;
     }
 
@@ -81,13 +120,23 @@ public class BookServiceImpl implements BookService {
         return bookRepository.save(book).getId();
     }
 
-    private Page<Book> findDisplayableBooks(int page, int size, User currentUser) {
+    private Page<Book> findDisplayableBooks(int page, int size, User user) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
-        return bookRepository.findAllDisplayableBooks(pageable, currentUser.getId());
+        return bookRepository.findAllDisplayableBooks(pageable, user.getId());
     }
 
-    private Page<Book> findBooksByOwner(int page, int size, User currentUser) {
+    private Page<Book> findBooksByOwner(int page, int size, User user) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
-        return bookRepository.findAll(withOwnerId(currentUser.getId()), pageable);
+        return bookRepository.findAll(withOwnerId(user.getId()), pageable);
+    }
+
+    private Page<BookTransactionHistory> findBorrowedBooks(int page, int size, User user) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        return bookTransactionHistoryRepository.findAllBorrowedBooks(pageable, user.getId());
+    }
+
+    private Page<BookTransactionHistory> findReturnedBooks(int page, int size, User user) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        return bookTransactionHistoryRepository.findAllReturnedBooks(pageable, user.getId());
     }
 }

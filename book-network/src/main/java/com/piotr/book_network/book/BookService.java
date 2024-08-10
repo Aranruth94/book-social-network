@@ -10,4 +10,8 @@ public interface BookService {
     PageResponse<BookResponse> findAllBooks(int page, int size, Authentication authentication);
 
     PageResponse<BookResponse> findAllBooksByOwner(int page, int size, Authentication authentication);
+
+    PageResponse<BorrowedBookResponse> findAllBorrowedBooks(int page, int size, Authentication authentication);
+
+    PageResponse<BorrowedBookResponse> findAllReturnedBooks(int page, int size, Authentication authentication);
 }
