@@ -58,8 +58,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(OperationNotPermittedException.class)
-    public ResponseEntity<ExceptionResponse> handleOperationNotPermittedException(OperationNotPermittedException exp) {
-        return buildErrorResponse(BAD_REQUEST, null, exp.getMessage());
+    public ResponseEntity<ExceptionResponse> handleException(OperationNotPermittedException exp) {
+        return ResponseEntity
+                .status(BAD_REQUEST)
+                .body(
+                        ExceptionResponse.builder()
+                                .error(exp.getMessage())
+                                .build()
+                );
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

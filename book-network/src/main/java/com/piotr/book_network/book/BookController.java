@@ -60,4 +60,18 @@ public class BookController {
             Authentication authentication) {
         return ResponseEntity.ok(bookService.findAllReturnedBooks(page, size, authentication));
     }
+
+    @PatchMapping("shareable/{book-id}")
+    public ResponseEntity<Integer> updateShareableStatus(
+            @PathVariable("book-id") Integer bookId,
+            Authentication authentication) {
+        return ResponseEntity.ok(bookService.updateShareableStatus(bookId, authentication));
+    }
+
+    @PatchMapping("archived/{book-id}")
+    public ResponseEntity<Integer> updateArchivedStatus(
+            @PathVariable("book-id") Integer bookId,
+            Authentication authentication) {
+        return ResponseEntity.ok(bookService.updateArchivedStatus(bookId, authentication));
+    }
 }

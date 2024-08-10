@@ -1,5 +1,6 @@
 package com.piotr.book_network.book;
 
+import com.piotr.book_network.exception.OperationNotPermittedException;
 import com.piotr.book_network.history.BookTransactionHistory;
 import com.piotr.book_network.history.BookTransactionHistoryRepository;
 import com.piotr.book_network.user.User;
@@ -13,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.piotr.book_network.book.BookSpecification.withOwnerId;
 
@@ -110,6 +112,24 @@ public class BookServiceImpl implements BookService {
         );
     }
 
+    @Override
+    public Integer updateShareableStatus(Integer bookId, Authentication authentication) {
+        Book book = findBookById(bookId);
+        User user = (User) authentication.getPrincipal();
+        checkBookOwnership(book, user);
+        book.setShareable(!book.isShareable());
+        return saveAndReturnBookId(book);
+    }
+
+    @Override
+    public Integer updateArchivedStatus(Integer bookId, Authentication authentication) {
+        Book book = findBookById(bookId);
+        User user = (User) authentication.getPrincipal();
+        checkBookOwnership(book, user);
+        book.setArchived(!book.isArchived());
+        return saveAndReturnBookId(book);
+    }
+
     private Book mapAndPrepareBook(BookRequest bookRequest, User user) {
         Book book = bookMapper.mapToBook(bookRequest);
         book.setOwner(user);
@@ -138,5 +158,16 @@ public class BookServiceImpl implements BookService {
     private Page<BookTransactionHistory> findReturnedBooks(int page, int size, User user) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
         return bookTransactionHistoryRepository.findAllReturnedBooks(pageable, user.getId());
+    }
+
+    private Book findBookById(Integer bookId) {
+        return bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
+    }
+
+    private void checkBookOwnership(Book book, User user) {
+        if (!Objects.equals(book.getOwner().getId(), user.getId())) {
+            throw new OperationNotPermittedException("You are not the owner of this book");
+        }
     }
 }
