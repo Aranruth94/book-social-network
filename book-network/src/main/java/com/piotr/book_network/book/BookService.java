@@ -22,4 +22,6 @@ public interface BookService {
     Integer borrowBook(Integer bookId, Authentication authentication);
 
     Integer returnBorrowBook(Integer bookId, Authentication authentication);
+
+    Integer approveReturnBorrowBook(Integer bookId, Authentication authentication);
 }
