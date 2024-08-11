@@ -149,6 +149,17 @@ public class BookServiceImpl implements BookService {
         return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
     }
 
+    @Override
+    public Integer returnBorrowBook(Integer bookId, Authentication authentication) {
+        Book book = findBookById(bookId);
+        User user = (User) authentication.getPrincipal();
+        isBookArchivedAndNotShareable(book);
+        checkBookOwnership(book, user, "You cannot borrow or return your own book");
+        BookTransactionHistory bookTransactionHistory = findBookTransactionHistoryByBookIdAndUserId(bookId, user.getId());
+        bookTransactionHistory.setReturned(true);
+        return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
+    }
+
     private Book mapAndPrepareBook(BookRequest bookRequest, User user) {
         Book book = bookMapper.mapToBook(bookRequest);
         book.setOwner(user);
@@ -197,7 +208,7 @@ public class BookServiceImpl implements BookService {
     }
 
     private void isBookArchivedAndNotShareable(Book book) {
-        if(isBookArchived(book) || isBookNotShareable(book)) {
+        if (isBookArchived(book) || isBookNotShareable(book)) {
             throw new OperationNotPermittedException("Book cannot be borrowed because it is archived and not shareable");
         }
     }
@@ -208,5 +219,10 @@ public class BookServiceImpl implements BookService {
 
     private Boolean isBookNotShareable(Book book) {
         return !book.isShareable();
+    }
+
+    private BookTransactionHistory findBookTransactionHistoryByBookIdAndUserId(Integer bookId, Integer userId) {
+        return bookTransactionHistoryRepository.findBookByIdAndUserId(bookId, userId)
+                .orElseThrow(() -> new OperationNotPermittedException("You did not borrow this book"));
     }
 }
