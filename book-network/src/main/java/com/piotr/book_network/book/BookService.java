@@ -18,4 +18,6 @@ public interface BookService {
     Integer updateShareableStatus(Integer bookId, Authentication authentication);
 
     Integer updateArchivedStatus(Integer bookId, Authentication authentication);
+
+    Integer borrowBook(Integer bookId, Authentication authentication);
 }

@@ -1,12 +1,9 @@
 package com.piotr.book_network.history;
 
-import com.piotr.book_network.book.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
-import java.util.List;
 
 public interface BookTransactionHistoryRepository extends JpaRepository<BookTransactionHistory, Integer> {
 
@@ -23,4 +20,13 @@ public interface BookTransactionHistoryRepository extends JpaRepository<BookTran
             WHERE history.book.owner.id = :usedId
             """)
     Page<BookTransactionHistory> findAllReturnedBooks(Pageable pageable, Integer userId);
+
+    @Query("""
+            SELECT COUNT(*) > 0 AS  isBorrowed
+            FROM BookTransactionHistory history
+            WHERE history.user.id = :userId
+            AND history.book.id = :bookId
+            AND history.returnApproved = false
+            """)
+    boolean isAlreadyBorrowedByUser(Integer bookId, Integer userId);
 }

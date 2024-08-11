@@ -74,4 +74,11 @@ public class BookController {
             Authentication authentication) {
         return ResponseEntity.ok(bookService.updateArchivedStatus(bookId, authentication));
     }
+
+    @PostMapping("borrow/{book-id}")
+    public ResponseEntity<Integer> borrowBook(
+            @PathVariable("book-id") Integer bookId,
+            Authentication authentication) {
+        return ResponseEntity.ok(bookService.borrowBook(bookId, authentication));
+    }
 }

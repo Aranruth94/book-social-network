@@ -130,6 +130,25 @@ public class BookServiceImpl implements BookService {
         return saveAndReturnBookId(book);
     }
 
+    @Override
+    public Integer borrowBook(Integer bookId, Authentication authentication) {
+        Book book = findBookById(bookId);
+        User user = (User) authentication.getPrincipal();
+        isBookArchivedAndNotShareable(book);
+        checkBookOwnership(book, user, "You cannot borrow your own book");
+        final boolean isAlreadyBorrowed = bookTransactionHistoryRepository.isAlreadyBorrowedByUser(bookId, user.getId());
+        if (isAlreadyBorrowed) {
+            throw new OperationNotPermittedException("You have already borrowed this book");
+        }
+        BookTransactionHistory bookTransactionHistory = BookTransactionHistory.builder()
+                .user(user)
+                .book(book)
+                .returned(false)
+                .returnApproved(false)
+                .build();
+        return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
+    }
+
     private Book mapAndPrepareBook(BookRequest bookRequest, User user) {
         Book book = bookMapper.mapToBook(bookRequest);
         book.setOwner(user);
@@ -169,5 +188,25 @@ public class BookServiceImpl implements BookService {
         if (!Objects.equals(book.getOwner().getId(), user.getId())) {
             throw new OperationNotPermittedException("You are not the owner of this book");
         }
+    }
+
+    private void checkBookOwnership(Book book, User user, String message) {
+        if (!Objects.equals(book.getOwner().getId(), user.getId())) {
+            throw new OperationNotPermittedException(message);
+        }
+    }
+
+    private void isBookArchivedAndNotShareable(Book book) {
+        if(isBookArchived(book) || isBookNotShareable(book)) {
+            throw new OperationNotPermittedException("Book cannot be borrowed because it is archived and not shareable");
+        }
+    }
+
+    private Boolean isBookArchived(Book book) {
+        return book.isArchived();
+    }
+
+    private Boolean isBookNotShareable(Book book) {
+        return !book.isShareable();
     }
 }
