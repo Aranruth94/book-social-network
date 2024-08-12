@@ -3,6 +3,8 @@ package com.piotr.book_network.book;
 import com.piotr.book_network.history.BookTransactionHistory;
 import org.springframework.stereotype.Service;
 
+import static com.piotr.book_network.file.FileUtils.readFileFromLocation;
+
 @Service
 public class BookMapper {
 
@@ -28,6 +30,7 @@ public class BookMapper {
                 .owner(book.getOwner().getFullName())
                 .archived(book.isArchived())
                 .shareable(book.isShareable())
+                .cover(readFileFromLocation(book.getBookCover()))
                 .build();
     }
 
