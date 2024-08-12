@@ -1,6 +1,7 @@
 package com.piotr.book_network.book;
 
 import com.piotr.book_network.exception.OperationNotPermittedException;
+import com.piotr.book_network.file.FileStorageService;
 import com.piotr.book_network.history.BookTransactionHistory;
 import com.piotr.book_network.history.BookTransactionHistoryRepository;
 import com.piotr.book_network.user.User;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +26,7 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
     private final BookTransactionHistoryRepository bookTransactionHistoryRepository;
+    private final FileStorageService fileStorageService;
     private final BookMapper bookMapper;
 
     @Override
@@ -169,6 +172,15 @@ public class BookServiceImpl implements BookService {
         BookTransactionHistory bookTransactionHistory = findBookTransactionHistoryByBookIdAndOwnerId(bookId, user.getId());
         bookTransactionHistory.setReturnApproved(true);
         return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
+    }
+
+    @Override
+    public void uploadBookCoverPicture(MultipartFile file, Authentication authentication, Integer bookId) {
+        Book book = findBookById(bookId);
+        User user = (User) authentication.getPrincipal();
+        String bookCover = fileStorageService.saveFile(file, user.getId());
+        book.setBookCover(bookCover);
+        bookRepository.save(book);
     }
 
     private Book mapAndPrepareBook(BookRequest bookRequest, User user) {

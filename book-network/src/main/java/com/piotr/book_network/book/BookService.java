@@ -1,6 +1,7 @@
 package com.piotr.book_network.book;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface BookService {
     Integer saveBook(BookRequest bookRequest, Authentication authentication);
@@ -24,4 +25,6 @@ public interface BookService {
     Integer returnBorrowBook(Integer bookId, Authentication authentication);
 
     Integer approveReturnBorrowBook(Integer bookId, Authentication authentication);
+
+    void uploadBookCoverPicture(MultipartFile file, Authentication authentication, Integer bookId);
 }

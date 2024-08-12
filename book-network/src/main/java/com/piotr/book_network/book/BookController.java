@@ -1,11 +1,13 @@
 package com.piotr.book_network.book;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("books")
@@ -95,4 +97,16 @@ public class BookController {
             Authentication authentication) {
         return ResponseEntity.ok(bookService.approveReturnBorrowBook(bookId, authentication));
     }
+
+    @PostMapping(value = "/cover/{book-id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> uploadBookCoverPicture(
+            @PathVariable("book-id") Integer bookId,
+            @Parameter
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication
+    ) {
+        bookService.uploadBookCoverPicture(file, authentication, bookId);
+        return ResponseEntity.accepted().build();
+    }
+
 }
