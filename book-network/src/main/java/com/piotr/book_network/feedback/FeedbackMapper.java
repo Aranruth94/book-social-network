@@ -1,7 +1,9 @@
 package com.piotr.book_network.feedback;
 
 import com.piotr.book_network.book.Book;
+import org.springframework.stereotype.Service;
 
+@Service
 public class FeedbackMapper {
 
     public Feedback toFeedback(FeedbackRequest feedbackRequest) {
