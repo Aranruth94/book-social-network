@@ -1,5 +1,6 @@
 package com.piotr.book_network.book;
 
+import com.piotr.book_network.user.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,4 +28,12 @@ public interface BookService {
     Integer approveReturnBorrowBook(Integer bookId, Authentication authentication);
 
     void uploadBookCoverPicture(MultipartFile file, Authentication authentication, Integer bookId);
+
+    Book findBookById(Integer bookId);
+
+    void isBookArchivedAndNotShareable(Book book, String message);
+
+    void checkBookOwnership(Book book, User user, String message);
+
+    void checkBookNotOwnership(Book book, User user, String message);
 }

@@ -138,7 +138,7 @@ public class BookServiceImpl implements BookService {
         Book book = findBookById(bookId);
         User user = (User) authentication.getPrincipal();
         isBookArchivedAndNotShareable(book);
-        checkBookOwnership(book, user, "You cannot borrow your own book");
+        checkBookNotOwnership(book, user);
         final boolean isAlreadyBorrowed = bookTransactionHistoryRepository.isAlreadyBorrowedByUser(bookId, user.getId());
         if (isAlreadyBorrowed) {
             throw new OperationNotPermittedException("You have already borrowed this book");
@@ -157,7 +157,7 @@ public class BookServiceImpl implements BookService {
         Book book = findBookById(bookId);
         User user = (User) authentication.getPrincipal();
         isBookArchivedAndNotShareable(book);
-        checkBookOwnership(book, user, "You cannot borrow or return your own book");
+        checkBookNotOwnership(book, user);
         BookTransactionHistory bookTransactionHistory = findBookTransactionHistoryByBookIdAndUserId(bookId, user.getId());
         bookTransactionHistory.setReturned(true);
         return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
@@ -213,7 +213,7 @@ public class BookServiceImpl implements BookService {
         return bookTransactionHistoryRepository.findAllReturnedBooks(pageable, user.getId());
     }
 
-    private Book findBookById(Integer bookId) {
+    public Book findBookById(Integer bookId) {
         return bookRepository.findById(bookId)
                 .orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
     }
@@ -224,8 +224,20 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    private void checkBookOwnership(Book book, User user, String message) {
+    public void checkBookOwnership(Book book, User user, String message) {
         if (!Objects.equals(book.getOwner().getId(), user.getId())) {
+            throw new OperationNotPermittedException(message);
+        }
+    }
+
+    private void checkBookNotOwnership(Book book, User user) {
+        if (Objects.equals(book.getOwner().getId(), user.getId())) {
+            throw new OperationNotPermittedException("You cannot borrow or return your own book");
+        }
+    }
+
+    public void checkBookNotOwnership(Book book, User user, String message) {
+        if (Objects.equals(book.getOwner().getId(), user.getId())) {
             throw new OperationNotPermittedException(message);
         }
     }
@@ -233,6 +245,12 @@ public class BookServiceImpl implements BookService {
     private void isBookArchivedAndNotShareable(Book book) {
         if (isBookArchived(book) || isBookNotShareable(book)) {
             throw new OperationNotPermittedException("Book cannot be borrowed because it is archived and not shareable");
+        }
+    }
+
+    public void isBookArchivedAndNotShareable(Book book, String message) {
+        if (isBookArchived(book) || isBookNotShareable(book)) {
+            throw new OperationNotPermittedException(message);
         }
     }
 
