@@ -3,6 +3,8 @@ package com.piotr.book_network.feedback;
 import com.piotr.book_network.book.Book;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 public class FeedbackMapper {
 
@@ -15,6 +17,14 @@ public class FeedbackMapper {
                         .archived(false)
                         .shareable(false)
                         .build())
+                .build();
+    }
+
+    public FeedbackResponse toFeedbackResponse(Feedback feedback, Integer id) {
+        return FeedbackResponse.builder()
+                .note(feedback.getNote())
+                .comment(feedback.getComment())
+                .ownFeedback(Objects.equals(feedback.getCreatedBy(), id))
                 .build();
     }
 }
